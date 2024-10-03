@@ -1,0 +1,16 @@
+{
+  "name": "@skypro-web-developer/my-backend-02-template",
+  "version": "1.0.0",
+  "description": "Шаблон для выполнения второго домашнего задания",
+  "private": true,
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
