@@ -21,7 +21,10 @@ const server = http.createServer((request, response) => {
   } else if (url.searchParams.has("users")) {
     response.statusCode = 200;
     response.setHeader("Content-Type", "application/json");
-    response.end(getUsers());
+
+    const usersData = getUsers();
+    
+    response.end(usersData);
   } else if (url.searchParams.toString() === "") {
     response.statusCode = 200;
     response.setHeader("Content-Type", "text/plain");
