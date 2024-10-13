@@ -1,41 +1,63 @@
-const http = require("http");
-const getUsers = require("./modules/users");
-const path = require("path");
+const express = require("express");
+const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const userRouter = require("./routes/users");
+const bookRouter = require("./routes/books");
 
-const port = process.env.PORT || 3003;
+// Вызываем функцию конфигурации
+dotenv.config();
 
-const server = http.createServer((request, response) => {
-  const url = new URL(request.url, `http://${request.headers.host}`);
-  const helloParam = url.searchParams.get("hello");
+// Адрес сервера и порт
+const {
+  PORT = 3005,
+  API_URL = "http://127.0.0.1",
+  MONGO_URL = "mongodb://localhost:27017/backend-02-template-main-my-version",
+} = process.env;
 
-  if (url.searchParams.has("hello")) {
-    if (helloParam) {
-      response.statusCode = 200;
-      response.setHeader("Content-Type", "text/plain");
-      response.end(`Hello, ${helloParam}!`);
-    } else {
-      response.statusCode = 400;
-      response.setHeader("Content-Type", "text/plain");
-      response.end("Enter a name");
-    }
-  } else if (url.searchParams.has("users")) {
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "application/json");
+// Подключение к БД
+try {
+  mongoose.connect(MONGO_URL);
+  console.log("Success connected to MongoDb");
+} catch (error) {
+  console.log(error);
+}
 
-    const usersData = getUsers();
-    
-    response.end(usersData);
-  } else if (url.searchParams.toString() === "") {
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "text/plain");
-    response.end("Hello, World!");
-  } else {
-    response.statusCode = 500;
-    response.setHeader("Content-Type", "text/plain");
-    response.end();
-  }
+const app = express();
+
+// Опции для настройки CORS
+const corsOptions = {
+  origin: API_URL, // Разрешить доступ только с этого домена
+  methods: "GET,PUT,POST,DELETE", // Разрешенные HTTP-методы
+  allowedHeaders: ["Content-Type", "Authorization"], // Разрешенные заголовки
+};
+
+app.use(cors(corsOptions));
+app.use(bodyParser.json()); // Обработка тела запроса в формате JSON
+
+// Роуты
+app.use("/users", userRouter); // Префикс для роутов пользователей
+app.use("/books", bookRouter); // Префикс для роутов книг
+
+// Обработка корневого маршрута
+app.get("/", (req, res) => {
+  res.status(200).send("Hello, World!");
 });
 
-server.listen(port, () => {
-  console.log(`Сервер запущен по адресу http://127.0.0.1:${port}`);
+// Обработка ошибок 404
+app.use((req, res) => {
+  res.status(404).send({ message: "Ресурс не найден" });
 });
+
+// Обработка ошибок 500
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send({ message: "Что-то пошло не так на сервере" });
+});
+
+// Запуск сервера
+app.listen(PORT, () => {
+  console.log(`Сервер запущен по адресу ${API_URL}:${PORT}`);
+});
+
